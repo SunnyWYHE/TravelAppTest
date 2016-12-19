@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         //get the best location provided (find the provided already enabled
         String bestProvider = locMgr.getBestProvider(new Criteria(), true);
+//        String bestProvider = locMgr.getProvider(LocationManager.GPS_PROVIDER).getName();
         locProviderTxv.setText(bestProvider);
 
         if (bestProvider != null) {
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             locMgr.requestLocationUpdates(bestProvider, MIN_TIME, MIN_DIST, this); //register location event monitor
 
         } else {
-            txv.setText("Please make sure the GPS is enabled");
+            txv.setText("No location provider.");
         }
     }
 
