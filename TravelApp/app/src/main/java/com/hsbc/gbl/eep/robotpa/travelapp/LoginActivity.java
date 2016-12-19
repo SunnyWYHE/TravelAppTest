@@ -34,6 +34,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +65,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final int REQUEST_READ_CONTACTS = 0;
 
     /**
+     * local database to keep cached data
+     */
+    private static final String DB_NAME="TravelDB";
+    private static final String TBL_NAME_LOGIN = "TBL_LOGIN";
+    private static final String TBL_NAME_ADDRESS = "TBL_ADDRESS";
+    private SQLiteDatabase db;
+
+    /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
@@ -73,10 +85,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private TextView errorMsg; // Error Msg TextView Object
     private CheckBox mRemLoginView;  //check box to enable remember login
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        //create local database for local data saving
+        db = openOrCreateDatabase(DB_NAME
+                                 ,Context.MODE_PRIVATE
+                                 ,null);
+
+        String createTableLogin = "CREATE TABLE IF NOT EXISTS " + TBL_NAME_LOGIN +
+                                  " (username VARCHAR(100), " +
+                                  "create_time VARCHAR(100)";
+        db.execSQL(createTableLogin);
 
         // Find Error Msg Text View control by ID
         errorMsg = (TextView)findViewById(R.id.login_error);

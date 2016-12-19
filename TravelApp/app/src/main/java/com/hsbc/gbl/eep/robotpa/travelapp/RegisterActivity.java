@@ -116,6 +116,10 @@ public class RegisterActivity extends AppCompatActivity {
                     if(obj.getBoolean("status")){
                         // Set Default Values for Edit View controls
                         setDefaultValues();
+
+                        // register successfully, go to login page
+                        navigatetoLoginActivity(null);
+
                         // Display successfully registered message using Toast
                         Toast.makeText(getApplicationContext(), "You are successfully registered!", Toast.LENGTH_LONG).show();
                     }
