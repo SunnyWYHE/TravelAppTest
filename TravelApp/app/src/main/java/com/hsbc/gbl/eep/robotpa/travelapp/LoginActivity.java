@@ -4,6 +4,7 @@ package com.hsbc.gbl.eep.robotpa.travelapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -99,7 +100,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         String createTableLogin = "CREATE TABLE IF NOT EXISTS " + TBL_NAME_LOGIN +
                                   " (username VARCHAR(100), " +
-                                  "create_time VARCHAR(100)";
+                                  "createtime VARCHAR(30))";
         db.execSQL(createTableLogin);
 
         // Find Error Msg Text View control by ID
@@ -117,7 +118,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptLogin();
+                try{
+                    attemptLogin();
+                } finally {
+                    db.close();
+                }
+
             }
         });
 
@@ -218,6 +224,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(true);
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
+
+            //if the checkbox "Remember login in this mobile" is checked
+            if(mRemLoginView.isChecked()) {
+                ContentValues cv = new ContentValues(2);
+                cv.put("username", email);
+                cv.put("creattime",System.currentTimeMillis());
+
+                db.insert(TBL_NAME_LOGIN, null, cv);
+            }
         }
     }
 
@@ -337,25 +352,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+            boolean isLocalAuth = false;
+            //check whether there is record in local database
+            String queryStr = "SELECT * FROM " + TBL_NAME_LOGIN + " WHERE username='" + mEmail + "'";
+            Cursor cur = db.rawQuery(queryStr, null);
+            if (cur.moveToFirst()) { //there is data
+                isLocalAuth = true;
             }
 
-            // Instantiate Http Request Param Object
-            RequestParams reqParams = new RequestParams();
+            if(!isLocalAuth) {
+                // Instantiate Http Request Param Object
+                RequestParams reqParams = new RequestParams();
 
-            // Put Http parameter username with value of Email Edit View control
-            reqParams.put("username", mEmail);
-            // Put Http parameter password with value of Password Edit Value control
-            reqParams.put("password", mPassword);
-            // Invoke RESTful Web Service with Http parameters
-            invokeWS(reqParams);
-
+                // Put Http parameter username with value of Email Edit View control
+                reqParams.put("username", mEmail);
+                // Put Http parameter password with value of Password Edit Value control
+                reqParams.put("password", mPassword);
+                // Invoke RESTful Web Service with Http parameters
+                invokeWS(reqParams);
+            }
             return true;
         }
 
