@@ -222,16 +222,30 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
 
-            //if the checkbox "Remember login in this mobile" is checked
-            if(mRemLoginView.isChecked()) {
-                ContentValues cv = new ContentValues(2);
-                cv.put("username", email);
-                cv.put("creattime",System.currentTimeMillis());
+            boolean isLocalAuth = false;
 
-                db.insert(TBL_NAME_LOGIN, null, cv);
+            //check whether there is record in local database
+            String queryStr = "SELECT * FROM " + TBL_NAME_LOGIN + " WHERE username='" + email + "'";
+            Cursor cur = db.rawQuery(queryStr, null);
+            if (cur.getCount() > 0) { //there is data
+                isLocalAuth = true;
+            }
+
+            if(isLocalAuth) {
+                navigatetoHomeActivity(email);
+            } else {
+                mAuthTask = new UserLoginTask(email, password);
+                mAuthTask.execute((Void) null);
+
+                //if the checkbox "Remember login in this mobile" is checked
+                if(mRemLoginView.isChecked()) {
+                    ContentValues cv = new ContentValues(2);
+                    cv.put("username", email);
+                    cv.put("createtime",System.currentTimeMillis());
+
+                    db.insert(TBL_NAME_LOGIN, null, cv);
+                }
             }
         }
     }
@@ -352,25 +366,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            boolean isLocalAuth = false;
-            //check whether there is record in local database
-            String queryStr = "SELECT * FROM " + TBL_NAME_LOGIN + " WHERE username='" + mEmail + "'";
-            Cursor cur = db.rawQuery(queryStr, null);
-            if (cur.moveToFirst()) { //there is data
-                isLocalAuth = true;
-            }
+            // Instantiate Http Request Param Object
+            RequestParams reqParams = new RequestParams();
 
-            if(!isLocalAuth) {
-                // Instantiate Http Request Param Object
-                RequestParams reqParams = new RequestParams();
+            // Put Http parameter username with value of Email Edit View control
+            reqParams.put("username", mEmail);
+            // Put Http parameter password with value of Password Edit Value control
+            reqParams.put("password", mPassword);
+            // Invoke RESTful Web Service with Http parameters
+            invokeWS(reqParams);
 
-                // Put Http parameter username with value of Email Edit View control
-                reqParams.put("username", mEmail);
-                // Put Http parameter password with value of Password Edit Value control
-                reqParams.put("password", mPassword);
-                // Invoke RESTful Web Service with Http parameters
-                invokeWS(reqParams);
-            }
             return true;
         }
 
@@ -400,7 +405,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         if(obj.getBoolean("status")){
                             Toast.makeText(getApplicationContext(), "You are successfully logged in!", Toast.LENGTH_LONG).show();
                             // Navigate to Home screen
-                            navigatetoHomeActivity();
+                            navigatetoHomeActivity(mEmail);
                         }
                         // Else display error message
                         else{
@@ -462,9 +467,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     /**
      * Method which navigates from Login Activity to Home Activity
      */
-    public void navigatetoHomeActivity(){
+    public void navigatetoHomeActivity(final String username){
         Intent homeIntent = new Intent(getApplicationContext(),HomeActivity.class);
         homeIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        homeIntent.putExtra("username", username);
         startActivity(homeIntent);
     }
 

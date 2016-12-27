@@ -55,13 +55,7 @@
                 android:text="Remember Login in this mobile"
                 android:id="@+id/ckRememberLogin" />
 
-            <TextView
-                android:id="@+id/login_error"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dip"
-                android:textColor="#e30000"
-                android:textStyle="bold" />
+
 
             <Button
                 android:id="@+id/btnLogin"
