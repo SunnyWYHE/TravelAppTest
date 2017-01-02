@@ -107,7 +107,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 // Hide Progress Dialog
-                prgDialog.hide();
+                prgDialog.dismiss();
                 try {
                     // JSON Object
                     String response = responseBody == null? null : new String(responseBody, "UTF-8");
@@ -142,7 +142,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                 // Hide Progress Dialog
-                prgDialog.hide();
+                prgDialog.dismiss();
                 // When Http response code is '404'
                 if(statusCode == 404){
                     Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();

@@ -83,7 +83,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private TextView errorMsg; // Error Msg TextView Object
+    private TextView mErrorMsgView; // Error Msg TextView Object
     private CheckBox mRemLoginView;  //check box to enable remember login
 
 
@@ -104,7 +104,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         db.execSQL(createTableLogin);
 
         // Find Error Msg Text View control by ID
-        errorMsg = (TextView)findViewById(R.id.login_error);
+        mErrorMsgView = (TextView)findViewById(R.id.login_error);
 
         mRemLoginView = (CheckBox) findViewById(R.id.ckRememberLogin);
 
@@ -403,13 +403,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         JSONObject obj = new JSONObject(response);
                         // When the JSON response has status boolean value assigned with true
                         if(obj.getBoolean("status")){
-                            Toast.makeText(getApplicationContext(), "You are successfully logged in!", Toast.LENGTH_LONG).show();
+                            //Toast.makeText(getApplicationContext(), "You are successfully logged in!", Toast.LENGTH_LONG).show();
                             // Navigate to Home screen
                             navigatetoHomeActivity(mEmail);
                         }
                         // Else display error message
                         else{
-                            errorMsg.setText(obj.getString("error_msg"));
+                            mErrorMsgView.setText(obj.getString("error_msg"));
                             Toast.makeText(getApplicationContext(), obj.getString("error_msg"), Toast.LENGTH_LONG).show();
                         }
                     } catch (JSONException e) {
