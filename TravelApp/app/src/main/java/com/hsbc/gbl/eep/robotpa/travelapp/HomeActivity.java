@@ -3,6 +3,9 @@ package com.hsbc.gbl.eep.robotpa.travelapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -34,6 +37,13 @@ public class HomeActivity extends AppCompatActivity {
     private View mTranslateBoxView;
 
     /**
+     * local database to keep cached data
+     */
+    private static final String DB_NAME="TravelDB";
+    private static final String TBL_NAME_ADDRESS = "TBL_ADDRESS";
+    private SQLiteDatabase db;
+
+    /**
      * Keep track of the translation task to ensure we can cancel it if requested.
      */
 //    private TranslationTask mTranslateTask = null;
@@ -57,6 +67,16 @@ public class HomeActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.translate_progress);
         // Find Error Msg Text View control by ID
         mErrorMsgView = (TextView)findViewById(R.id.translate_error);
+
+        //create local database for local data saving
+        db = openOrCreateDatabase(DB_NAME
+                , Context.MODE_PRIVATE
+                ,null);
+
+        String createTableAddress = "CREATE TABLE IF NOT EXISTS " + TBL_NAME_ADDRESS +
+                " (addr_eng VARCHAR(300), " +
+                "addr_local VARCHAR(500))";
+        db.execSQL(createTableAddress);
     }
 
     /**
@@ -64,9 +84,6 @@ public class HomeActivity extends AppCompatActivity {
      * @param view
      */
     public void doTranslation(View view) {
-//        if(mTranslateTask != null) {
-//            return;
-//        }
 
         boolean cancel = false;
         View focusView = null;
@@ -76,30 +93,31 @@ public class HomeActivity extends AppCompatActivity {
         if(TextUtils.isEmpty(addrInput)) {
             cancel = true;
             focusView = mAddressToTranslateView;
+
+            mErrorMsgView.setText("Please input the address to translate");
             return;
         }
 
         if(cancel) {
             focusView.requestFocus();
         } else {
-            //TODO: show progress
-//            showProgress(true);
+            //Check whether the mobile is connected to any network
+            boolean isNetworkConnected = NetworkUtils.isNetworkConnected(getApplicationContext());
 
-            //kick off a background task to do the translation
-//            mTranslateTask = new TranslationTask(addrInput);
-//            mTranslateTask.execute((Void) null);
+            try {
+                //if there is network service, go to server side and get the latest translation
+                if (isNetworkConnected) {
+                    invokeWS(addrInput);
+                } else { //if there is no network service, check the local record
 
-            //TODO: check in local database first
-            boolean localFound = false;
-//            mAddressTranslatedView.setText("北京市");
-//            localFound = true;
+                }
+            } finally {
+                if(db != null) {
+                    db.close();
+                }
 
-            //If cannot find in local database, check from server side
-            if (!localFound) {
-                invokeWS(addrInput);
             }
 
-//            showProgress(false);
         }
     }
 
@@ -108,7 +126,7 @@ public class HomeActivity extends AppCompatActivity {
      *
      * @param params
      */
-    public void invokeWS(String strToTranslate){
+    public void invokeWS(final String strToTranslate){
 
         // Make RESTful webservice call using AsyncHttpClient object
         AsyncHttpClient client = new AsyncHttpClient();
@@ -127,6 +145,13 @@ public class HomeActivity extends AppCompatActivity {
                     // When the JSON response has status boolean value assigned with true
 //                        if(obj.getBoolean("status")){
                     mAddressTranslatedView.setText(response);
+
+                    //save the address record to database
+                    ContentValues cv = new ContentValues(2);
+                    cv.put("addr_eng", strToTranslate);
+                    cv.put("addr_local",response);
+
+                    db.insert(TBL_NAME_ADDRESS, null, cv);
 //                        }
                     // Else display error message
 //                        else{

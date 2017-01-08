@@ -74,10 +74,17 @@
                 android:layout_marginLeft="5dp" />
 
             <EditText
-                android:layout_width="335dp"
-                android:layout_height="wrap_content"
                 android:id="@+id/addr_eng"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
+                android:enabled="true"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:maxLines="5"
+                android:scrollbars="vertical"
+                android:background="@android:drawable/edit_text"
                 android:hint="Please input address in English." />
 
             <!-- Error message -->
@@ -103,7 +110,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:id="@+id/addr_local"
-                android:lines="3"
+                android:lines="4"
                 android:scrollbars="vertical"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp" />
