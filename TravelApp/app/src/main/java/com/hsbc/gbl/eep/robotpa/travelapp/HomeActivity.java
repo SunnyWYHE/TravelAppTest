@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -77,6 +78,8 @@ public class HomeActivity extends AppCompatActivity {
                 " (addr_eng VARCHAR(300), " +
                 "addr_local VARCHAR(500))";
         db.execSQL(createTableAddress);
+
+        db.close();
     }
 
     /**
@@ -104,20 +107,25 @@ public class HomeActivity extends AppCompatActivity {
             //Check whether the mobile is connected to any network
             boolean isNetworkConnected = NetworkUtils.isNetworkConnected(getApplicationContext());
 
-            try {
+
                 //if there is network service, go to server side and get the latest translation
                 if (isNetworkConnected) {
                     invokeWS(addrInput);
                 } else { //if there is no network service, check the local record
-
-                }
-            } finally {
-                if(db != null) {
+                    //open the database and get the record
+                    db = openOrCreateDatabase(DB_NAME
+                            , Context.MODE_PRIVATE
+                            , null);
+                    String sql = "SELECT addr_local from " + TBL_NAME_ADDRESS + " WHERE addr_eng='" + addrInput + "'";
+                    Cursor cur = db.rawQuery(sql, null);
+                    //TODO: suppose 1 record only.  Add logic later for checking.
+                    if (cur.moveToFirst()) {
+                        do {
+                            mAddressTranslatedView.setText(cur.getString(0));
+                        } while (cur.moveToNext());
+                    }
                     db.close();
                 }
-
-            }
-
         }
     }
 
@@ -146,12 +154,27 @@ public class HomeActivity extends AppCompatActivity {
 //                        if(obj.getBoolean("status")){
                     mAddressTranslatedView.setText(response);
 
-                    //save the address record to database
-                    ContentValues cv = new ContentValues(2);
-                    cv.put("addr_eng", strToTranslate);
-                    cv.put("addr_local",response);
+                    //open the database to save the record
+                    db = openOrCreateDatabase(DB_NAME
+                            , Context.MODE_PRIVATE
+                            ,null);
 
-                    db.insert(TBL_NAME_ADDRESS, null, cv);
+                    String sql = "SELECT addr_local from " + TBL_NAME_ADDRESS + " WHERE addr_eng='" + strToTranslate + "'";
+                    Cursor cur = db.rawQuery(sql, null);
+                    if (cur.getCount() > 0) { //if there is record in local, update it.
+                        ContentValues cv = new ContentValues();
+                        cv.put("addr_local",response);
+                        db.update(TBL_NAME_ADDRESS, cv, "addr_eng=?", new String[] {strToTranslate});
+                    } else {
+                        //save the address record to database
+                        ContentValues cv = new ContentValues(2);
+                        cv.put("addr_eng", strToTranslate);
+                        cv.put("addr_local",response);
+
+                        db.insert(TBL_NAME_ADDRESS, null, cv);
+                    }
+
+                    db.close();
 //                        }
                     // Else display error message
 //                        else{
