@@ -159,8 +159,8 @@ public class HomeActivity extends AppCompatActivity {
                             , Context.MODE_PRIVATE
                             ,null);
 
-                    String sql = "SELECT addr_local from " + TBL_NAME_ADDRESS + " WHERE addr_eng='" + strToTranslate + "'";
-                    Cursor cur = db.rawQuery(sql, null);
+                    String sql = "SELECT addr_local from " + TBL_NAME_ADDRESS + " WHERE addr_eng=?";
+                    Cursor cur = db.rawQuery(sql, new String[]{strToTranslate});
                     if (cur.getCount() > 0) { //if there is record in local, update it.
                         ContentValues cv = new ContentValues();
                         cv.put("addr_local",response);
