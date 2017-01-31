@@ -128,20 +128,21 @@
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/map_box"
             android:background="#b3d6d7"
             android:nestedScrollingEnabled="true"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:layout_gravity="top|left|bottom|right">
+            android:layout_gravity="top|left|bottom|right"
+            android:layout_height="200dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+            <fragment
                 android:id="@+id/map"
-                android:textColor="#010101"
-                android:layout_marginLeft="5dp" />
+                class="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

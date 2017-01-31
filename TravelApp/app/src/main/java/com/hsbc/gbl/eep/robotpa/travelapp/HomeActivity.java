@@ -5,30 +5,35 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.Intent;
 import android.database.Cursor;
-import android.os.AsyncTask;
+import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Button;
-import android.content.Intent;
 import android.widget.Toast;
-import android.view.View;
-import android.text.TextUtils;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private TextView mWelcomeUserView; //  User Name TextView Object
     private EditText mAddressToTranslateView;  //address to translate EditText object
@@ -43,6 +48,7 @@ public class HomeActivity extends AppCompatActivity {
     private static final String DB_NAME="TravelDB";
     private static final String TBL_NAME_ADDRESS = "TBL_ADDRESS";
     private SQLiteDatabase db;
+    private GoogleMap mMap;
 
     /**
      * Keep track of the translation task to ensure we can cancel it if requested.
@@ -68,6 +74,10 @@ public class HomeActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.translate_progress);
         // Find Error Msg Text View control by ID
         mErrorMsgView = (TextView)findViewById(R.id.translate_error);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         //create local database for local data saving
         db = openOrCreateDatabase(DB_NAME
@@ -122,6 +132,7 @@ public class HomeActivity extends AppCompatActivity {
                     if (cur.moveToFirst()) {
                         do {
                             mAddressTranslatedView.setText(cur.getString(0));
+                            showInMap(cur.getString(0));
                         } while (cur.moveToNext());
                     }
                     db.close();
@@ -132,7 +143,6 @@ public class HomeActivity extends AppCompatActivity {
     /**
      * Method that performs RESTful webservice invocations
      *
-     * @param params
      */
     public void invokeWS(final String strToTranslate){
 
@@ -153,7 +163,7 @@ public class HomeActivity extends AppCompatActivity {
                     // When the JSON response has status boolean value assigned with true
 //                        if(obj.getBoolean("status")){
                     mAddressTranslatedView.setText(response);
-
+                    showInMap(response);
                     //open the database to save the record
                     db = openOrCreateDatabase(DB_NAME
                             , Context.MODE_PRIVATE
@@ -245,5 +255,36 @@ public class HomeActivity extends AppCompatActivity {
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mTranslateBoxView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
+    }
+
+    public void showInMap(String strAddr) {
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> addressList = null;
+        try {
+            addressList = geocoder.getFromLocationName(strAddr,1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Address address = addressList.get(0);
+        LatLng latLng = new LatLng(address.getLatitude(),address.getLongitude());
+        mMap.addMarker(new MarkerOptions().position(latLng).title(strAddr));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        Geocoder geocoder = new Geocoder(this);
+        List<Address> addressList = null;
+        try {
+            addressList = geocoder.getFromLocationName("London",1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Address address = addressList.get(0);
+        LatLng latLng = new LatLng(address.getLatitude(),address.getLongitude());
+        mMap.addMarker(new MarkerOptions().position(latLng).title("Marker in London"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,11));
     }
 }
